@@ -1,4 +1,4 @@
-# Grace Corpus Catalog
+# Agent Corpus Catalog
 
 | Dataset | Status | Size | Format | License | Query hint |
 |---|---|---|---|---|---|

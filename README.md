@@ -1,6 +1,6 @@
-# grace-corpus
+# agent-corpus
 
-The Grace dataset **catalog and verification gate**. The data itself lives
+The agent verification corpus — **catalog and query gate**. The data itself lives
 in `C:\Users\aaron\Desktop\datasets\` (too large for git); this repo shares
 the *index of it* so Devin, AMP, and future agents can all answer
 "does our corpus already contain X?" mechanically.
