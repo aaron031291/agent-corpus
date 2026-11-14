@@ -11,6 +11,12 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "corpus", "catalog.db")
 
 # name -> (source, format, license, query_hint, notes)
 MANIFEST = {
+    "Project_CodeNet.tar.gz": ("IBM/Project_CodeNet", "tar.gz",
+        "research use", "extract to get full corpus",
+        "8.3GB compressed full CodeNet; extracted README only so far"),
+    "runbugrun.sql.lrz": ("github.com/giganticode/run_bug_run releases", "lrzip SQLite dump",
+        "research", "lrunzip -z -> sqlite3 runbugrun.db",
+        "115MB compressed; 700k buggy/fixed pairs"),
     "Project_CodeNet": ("IBM/Project_CodeNet", "tar.gz + extracted dirs",
         "research use", "metadata/*.csv per problem; data/<problem>/<lang>/s*.ext",
         "13.9M submissions, 4053 problems, 55 langs; Accepted/WrongAnswer labels"),
@@ -92,22 +98,30 @@ def dir_size(path):
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
+    fresh = not os.path.exists(DB_PATH)
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute("""CREATE TABLE datasets(
+    # preserve jobs + claims_checked across rebuilds; wipe datasets/artifacts
+    cur.execute("""CREATE TABLE IF NOT EXISTS datasets(
         id INTEGER PRIMARY KEY, name TEXT UNIQUE, source TEXT, format TEXT,
         license TEXT, local_path TEXT, size_bytes INTEGER,
         status TEXT, query_hint TEXT, notes TEXT, added_at TEXT DEFAULT (datetime('now')))""")
-    cur.execute("""CREATE TABLE artifacts(
+    cur.execute("""CREATE TABLE IF NOT EXISTS artifacts(
         id INTEGER PRIMARY KEY, dataset_id INTEGER REFERENCES datasets(id),
         kind TEXT, path TEXT, description TEXT)""")
-    cur.execute("""CREATE TABLE claims_checked(
+    cur.execute("""CREATE TABLE IF NOT EXISTS claims_checked(
         id INTEGER PRIMARY KEY, ts TEXT DEFAULT (datetime('now')),
         agent TEXT, claim TEXT, dataset TEXT, query TEXT,
         result_summary TEXT, verified INTEGER)""")
-    cur.execute("CREATE INDEX idx_artifacts_ds ON artifacts(dataset_id)")
+    cur.execute("""CREATE TABLE IF NOT EXISTS jobs(
+        id INTEGER PRIMARY KEY, name TEXT UNIQUE, artifact_path TEXT,
+        expected_bytes INTEGER, last_size INTEGER DEFAULT 0,
+        last_check TEXT, note TEXT,
+        status TEXT DEFAULT 'unknown')""")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_ds ON artifacts(dataset_id)")
+    # wipe datasets/artifacts (rebuilt each run); keep jobs + claims_checked
+    cur.execute("DELETE FROM artifacts")
+    cur.execute("DELETE FROM datasets")
 
     for name, (source, fmt, lic, hint, notes) in MANIFEST.items():
         path = os.path.join(DATASETS_DIR, name)

@@ -28,6 +28,12 @@ def main():
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out = []
     for j in con.execute("SELECT * FROM jobs ORDER BY name"):
+        if j["status"] in ("DONE", "PARTIAL", "FAILED"):
+            out.append({"job": j["name"], "status": j["status"],
+                        "size_gb": round((j["last_size"] or 0)/1e9, 2),
+                        "expected_gb": round(j["expected_bytes"]/1e9, 1) if j["expected_bytes"] else None,
+                        "note": (j["note"] or "") + " [manual]"})
+            continue
         size = dir_size(j["artifact_path"]) if os.path.exists(j["artifact_path"]) else 0
         exp = j["expected_bytes"]
         prev = j["last_size"] or 0
