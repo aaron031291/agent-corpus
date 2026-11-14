@@ -1,7 +1,5 @@
 # Grace Corpus Catalog
 
-Auto-generated from catalog.db — regenerate with tools/build_catalog.py.
-
 | Dataset | Status | Size | Format | License | Query hint |
 |---|---|---|---|---|---|
 | BugsInPy | present | 3.2MB | repo | research | Bugs/ per-project bug dirs |
@@ -32,3 +30,14 @@ Auto-generated from catalog.db — regenerate with tools/build_catalog.py.
 | libra-eval | present | 628.8MB | repo + JSONL datasets | Apache-2.0 | libra_eval/datasets/*.jsonl |
 | run_bug_run | present | 0.2MB | repo + .lrz SQLite dump | research | restore: lrunzip runbugrun.sql.lrz; sqlite3 runbugrun.db |
 | runbugrun.sql.lrz | present | 120.5MB | lrzip SQLite dump | research | lrunzip -z -> sqlite3 runbugrun.db |
+
+## Jobs (in-flight downloads)
+
+| Job | Status | Size | Expected | Note |
+|---|---|---|---|---|
+| code-contests-hf | GROWING | 7.6GB | 0GB | 41 parquet shards from HF |
+| cvefixes-zip | GROWING | 8.7GB | 13GB | 64-part ranged download -> concat to CVEfixes_v1.0.8.zip |
+| hf-batch-A | GROWING | 202.4GB | 0GB | download_hf.py: SWE-bench family, SWE-smith, Multi-SWE, SWE-Gym, ManySStuBs4J, bugswarm, devign, PrimeVul, bigvul |
+| hf-batch-B | GROWING | 202.4GB | 0GB | download_content_sets.py: codeparrot-clean, commitpackft, code_search_net, pile |
+| stack-smol-xl | GROWING | 9.6GB | 0GB | ungated Stack sample w/ content |
+| stack-v2-index | DONE | 140.8GB | 141GB | snapshot_download 11 langs; DONE when ~141GB |
