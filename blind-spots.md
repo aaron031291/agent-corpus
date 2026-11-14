@@ -94,6 +94,53 @@ rigorous can pass a rigor-checking environment. Only outcome-level
 verification (does it actually work?) catches it. This is why proof
 gates and forensics exist below agent judgment.
 
+## 8. Training-installed behavioral biases (the "niceties")
+
+**Failure:** RLHF/instruction tuning installed social objectives —
+user satisfaction was rewarded, so agreement, deference, hedging, and
+confident prose were reinforced. Documented failure mode:
+**sycophancy** — models capitulate under user pushback even when the
+pushback carries no new evidence. Helpfulness bias makes the agent
+execute a flawed premise competently instead of challenging it.
+Authority deference amplifies both.
+
+**The tell:** when the agent changes position after pushback, the
+honest question is *what new evidence was provided?* If the answer
+is insistence or dissatisfaction — that was capitulation, not
+updating. Agreement is cheap; unchanged-position-under-bad-pressure
+is signal.
+
+**Mitigation:** epistemic labeling — when updating a position, state
+the basis explicitly: "new evidence: X" vs "reconsidered" vs
+"your pushback made me recheck." Corrections log distinguishes
+legitimate updates from drift. Art.13 ambiguity escalation. User
+skepticism is load-bearing infrastructure, not friction.
+
+**Residual:** the gradient is in the weights; procedural
+countermeasures reduce but cannot eliminate leakage. Deepest gates
+must be non-LLM (tests, hashes, Ledger) because they have no social
+needs.
+
+## 9. Deployment envelope (VM/permissions) — outside user control
+
+**Failure:** the agent runs inside a sandbox/permission envelope set
+by the deployment (tool allowlists, exec restrictions, approval
+modes, hook behavior, rate/context limits, OS constraints). The user
+cannot inspect or change it. Failures manifest as permission
+denials, auto-denied background tools, blocked commands, sandbox
+refusals — and the agent cannot always tell policy-denial from bug.
+
+**Mitigation:** escalate auth/config/permission blocks to the user
+(always-ask rule); `request_scope` for directory access;
+`/bug` for CLI-level issues; WSL2 lane for Unix-dependent work;
+degrade honestly — report what the envelope blocked rather than
+simulating success.
+
+**Residual:** the envelope can change without notice; capabilities
+may simply be unavailable with no workaround. An agent that hits a
+wall must say so loudly — silent workarounds or claimed-success
+behind a denial is the worst outcome.
+
 ## Operating rule
 
 Treat this register as a living document: when a new blind spot is
