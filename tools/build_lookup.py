@@ -87,6 +87,29 @@ def scan_repo(term, repo):
     return hits[:25]
 
 
+def scan_git(term, repo, deep=False):
+    """git log lookup: what was built, when, how — commit messages always,
+    diff-content pickaxe only with deep=True (can be slow on big repos)."""
+    import subprocess
+    hits = {"msg": [], "diff": []}
+    if not repo or not os.path.isdir(os.path.join(repo, ".git")):
+        return hits
+    def run(args, timeout=20):
+        try:
+            r = subprocess.run(["git", "-C", repo] + args,
+                               capture_output=True, text=True, timeout=timeout)
+            return r.stdout.strip().splitlines() if r.returncode == 0 else []
+        except Exception:
+            return []
+    hits["msg"] = run(["log", "--all", "--oneline", "-i",
+                       f"--grep={term}", "-n", "15"])
+    if deep:
+        hits["diff"] = run(["log", "--all", "--oneline", "-G",
+                            term.replace("-", "\\-"), "-n", "10",
+                            "--", "*.py", "*.md"], timeout=40)
+    return hits
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     term = " ".join(args) if args else ""
@@ -144,7 +167,10 @@ def main():
             for s, fp, m, _ in hits[:5]:
                 print(f"    {os.path.relpath(fp, HUB)} ({m} mentions)")
 
-    print("\n[4] REPO SOURCE (imports-level, only if --repo given)")
+    deep = "--deep" in sys.argv
+    repo = repo or r"C:\Users\aaron\Desktop\Grace-Micro"
+
+    print("\n[4] REPO SOURCE (imports-level)")
     if repo:
         files = scan_repo(term, repo)
         if files:
@@ -156,6 +182,29 @@ def main():
             print("  no filename match in repo")
     else:
         print("  (skipped — pass --repo <path> to check source too)")
+
+    print("\n[5] GIT HISTORY (what/when/how was built)")
+    gh = scan_git(term, HUB)
+    rg = scan_git(term, repo, deep=deep) if repo and repo != HUB else {"msg": [], "diff": []}
+    any_git = False
+    if gh["msg"]:
+        any_git = True
+        print(f"  hub ({os.path.basename(HUB)}):")
+        for l in gh["msg"][:8]:
+            print(f"    {l[:100]}")
+    if repo and repo != HUB:
+        if rg["msg"]:
+            any_git = True
+            print(f"  repo ({repo}):")
+            for l in rg["msg"][:8]:
+                print(f"    {l[:100]}")
+        if rg["diff"]:
+            any_git = True
+            print("  diff-mentions (--deep):")
+            for l in rg["diff"][:8]:
+                print(f"    {l[:100]}")
+    if not any_git:
+        print("  no commit-message matches — try --deep for diff-content search")
 
     print("\nVERDICT: see [1] for authoritative state. Name-match anywhere")
     print("else = weak signal; only status-packet state + repo call path = truth.")
